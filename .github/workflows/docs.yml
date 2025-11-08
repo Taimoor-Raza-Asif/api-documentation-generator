@@ -15,6 +15,12 @@ on:
 
 jobs:
   build-and-deploy-docs:
+    # --- THIS IS THE NEW, IMPORTANT PART ---
+    # Grant permissions for the action to write to the repo
+    permissions:
+      contents: write
+    # ---------------------------------------------
+
     # Use the latest version of Ubuntu to run the job
     runs-on: ubuntu-latest
 
