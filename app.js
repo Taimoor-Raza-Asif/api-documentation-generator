@@ -24,7 +24,7 @@ const options = {
     },
     servers: [
       {
-        url: `http://localhost:${port}/api/v1`,
+        url: `http://localhost:${port}`,
         description: 'Development server',
       },
     ],
@@ -48,57 +48,59 @@ app.use('/static-docs', express.static(path.join(__dirname, 'public')));
 
 /**
  * @openapi
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 1
+ *         name:
+ *           type: string
+ *           example: 'Jane Doe'
+ *         email:
+ *           type: string
+ *           example: 'jane.doe@example.com'
+ *
  * /api/v1/users:
- * get:
- * summary: Retrieve a list of users
- * description: Fetches a list of all users.
- * tags: [Users]
- * responses:
- * '200':
- * description: A successful response.
- * content:
- * application/json:
- * schema:
- * type: array
- * items:
- * $ref: '#/components/schemas/User'
+ *   get:
+ *     summary: Retrieve a list of users
+ *     description: Fetches a list of all users.
+ *     tags:
+ *       - Users
+ *     responses:
+ *       '200':
+ *         description: A successful response.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
  *
  * /api/v1/users/{id}:
- * get:
- * summary: Get a user by ID
- * description: Fetches a single user by their ID.
- * tags: [Users]
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: integer
- * description: The user's ID
- * responses:
- * '200':
- * description: A single user object.
- * content:
- * application/json:
- * schema:
- * $ref: '#/components/schemas/User'
- * '404':
- * description: User not found
- *
- * components:
- * schemas:
- * User:
- * type: object
- * properties:
- * id:
- * type: integer
- * example: 1
- * name:
- * type: string
- * example: 'Jane Doe'
- * email:
- * type: string
- * example: 'jane.doe@example.com'
+ *   get:
+ *     summary: Get a user by ID
+ *     description: Fetches a single user by their ID.
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The user's ID
+ *     responses:
+ *       '200':
+ *         description: A single user object.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       '404':
+ *         description: User not found
  */
 
 // User data mock
