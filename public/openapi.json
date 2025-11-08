@@ -1,0 +1,17 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "My Project API",
+    "version": "1.0.0",
+    "description": "API documentation for my project, automatically generated."
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "Production server"
+    }
+  ],
+  "paths": {},
+  "components": {},
+  "tags": []
+}
