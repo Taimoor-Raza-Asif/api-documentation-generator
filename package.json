@@ -1,0 +1,15 @@
+{
+  "name": "api-docs-agent",
+  "version": "1.0.0",
+  "description": "A project demonstrating an automated API documentation generator.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "docs:generate": "node generate-docs.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  }
+}

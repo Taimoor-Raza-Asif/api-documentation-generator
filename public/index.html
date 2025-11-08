@@ -1,0 +1,31 @@
+<!--
+  This is the static documentation site.
+  It uses 'ReDoc' to create a beautiful, deployable, single-page site
+  from your 'openapi.json' file.
+  This file is what will be hosted on GitHub Pages.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Project API Documentation</title>
+    <meta charset="utf-m" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 
+      ReDoc will find this tag and replace it with your API documentation.
+      'spec-url' points to the JSON file our agent generates.
+    -->
+    <redoc spec-url='openapi.json'></redoc>
+
+    <!-- Load the ReDoc script from a CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js"></script>
+</body>
+</html>
