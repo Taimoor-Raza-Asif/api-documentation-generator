@@ -110,6 +110,7 @@ const users = [
 ];
 
 // API Routes
+// Route paths include the /api/v1 prefix to match the OpenAPI server URL
 app.get('/api/v1/users', (req, res) => {
   res.json(users);
 });
