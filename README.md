@@ -1,58 +1,113 @@
-API Documentation Generator Agent
+Documentation Generator Agent
 
-This project demonstrates how to create an automated "agent" (a CI/CD pipeline) that scans your Node.js code, generates an OpenAPI specification, and deploys it as a static website using GitHub Actions.
+This is the AI agent for Section C for the SPM project. Its purpose is to intelligently update OpenAPI documentation based on code changes.
 
-This fulfills all the requirements:
+This server is a "worker" agent designed to be called by the central "Supervisor" agent.
 
-Scans source files: swagger-jsdoc scans app.js for @openapi comments.
+Project Deliverables Met
 
-Regenerates sections: The npm run docs:generate script creates a new public/openapi.json file.
+Working Prototype: This server is a runnable prototype with functioning AI logic.
 
-Integrates with version control: The agent is a GitHub Actions workflow.
+Deployment: It is an HTTP API-based agent.
 
-Triggers on commits/pull requests: The on: [push, pull_request] trigger in docs.yml handles this.
+Communication: It communicates with the Supervisor via a JSON "handshake."
 
-Minimal manual effort: Developers only need to write code and the @openapi comments. The rest is automated.
+Logging & Health Check: It provides a GET /health endpoint as required.
 
-How to Run Locally
+AI Agentic Behavior: It uses an LLM (Gemini) to analyze code and generate structured documentation.
 
-1. Install Dependencies
+Memory Strategy: It loads existing_documentation into "short-term memory" to perform updates. If none is provided, it creates a new document.
+
+How to Run the Agent
+
+Install Dependencies:
 
 npm install
 
 
-2. Run the Live Server
-
-This runs the Express server, which hosts your API and a live, interactive version of the Swagger UI.
+Run the Agent Server:
 
 npm start
 
 
-Your API is at: http://localhost:3000/api/v1/users
+The server will now be running on http://localhost:3000.
 
-Your live interactive docs are at: http://localhost:3000/api-docs
+API Contract (Handshake)
 
-3. Test the Static Generation
+This agent exposes two endpoints for the Supervisor.
 
-This is what the "agent" will do. It generates the static files in the /public folder.
+1. Health Check
 
-npm run docs:generate
+Endpoint: GET /health
+
+Description: Allows the Supervisor to confirm the agent is online and ready.
+
+Success Response (200):
+
+{
+  "status": "I'm up and ready",
+  "agent_name": "Documentation Generator Agent (Section C)"
+}
 
 
-This creates public/openapi.json.
+2. Execute Task (Updated)
 
-To see the final website, just open the public/index.html file directly in your web browser. It will load openapi.json and display the documentation using ReDoc.
+Endpoint: POST /execute
 
-How the "Agent" Works (Automation)
+Description: This is the main "work" endpoint. The Supervisor sends code snippets that have changed. The agent analyzes the code with an AI, then updates and returns a complete documentation object.
 
-A developer pushes a commit or opens a pull request to the main branch.
+Request Body (Input):
 
-This triggers the GitHub Action defined in .github/workflows/docs.yml.
+{
+  "task": "update_documentation",
+  "existing_documentation": { ... },
+  "changed_files": [
+    {
+      "file_path": "routes/users.js",
+      "code_snippet": "app.post('/api/v1/users', (req, res) => { ... });"
+    }
+  ]
+}
 
-The workflow (on a remote server) checks out the code, installs dependencies, and runs npm run docs:generate.
 
-This creates the public/openapi.json file, capturing any changes from the new code.
+Field Descriptions:
 
-The final step of the workflow takes the entire public folder (which includes index.html and the newly generated openapi.json) and deploys it to your repository's GitHub Pages website.
+task (string, required): Must be "update_documentation".
 
-Your documentation site is now live and up-to-date with the latest code.
+existing_documentation (object, optional): The complete, old openapi.json object.
+
+If provided: The agent will update this object (its "memory").
+
+If null or omitted: The agent will create a new documentation object from scratch.
+
+changed_files (array, required): A list of file objects, each containing the code snippet to be analyzed.
+
+Success Response (200) (Output):
+
+{
+  "status": "success",
+  "message": "Documentation successfully processed for 1 endpoint(s).",
+  "updated_documentation": {
+    "openapi": "3.0.0",
+    "info": { ... },
+    "paths": {
+      "/api/v1/users": {
+        "post": {
+          "summary": "Creates a new user.",
+          "description": "This endpoint adds a new user to the database.",
+          "tags": ["Users"]
+        }
+      }
+    }
+  }
+}
+
+
+Error Response (500):
+
+{
+  "status": "error",
+  "message": "An error occurred while processing code snippets with the AI.",
+  "error": "Gemini API call failed with status: 500",
+  "updated_documentation": { ... }
+}
