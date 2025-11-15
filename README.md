@@ -1,113 +1,166 @@
-Documentation Generator Agent
+# 🤖 Documentation Generator AI Agent
 
-This is the AI agent for Section C for the SPM project. Its purpose is to intelligently update OpenAPI documentation based on code changes.
+This repository contains the **Supervisor-Compliant *Documentation
+Generator Agent*** for the **Software Project Management (SPM)** course,
+**Section C**.
 
-This server is a "worker" agent designed to be called by the central "Supervisor" agent.
+This is a fully autonomous, callable AI "worker agent" built using
+**Node.js** and **Express**.\
+It is designed to be triggered by a **Supervisor Agent** to perform one
+complex task:
 
-Project Deliverables Met
+> **Analyze source code (any language) → Generate rich, professional
+> OpenAPI 3.0 documentation using the Gemini AI API.**
 
-Working Prototype: This server is a runnable prototype with functioning AI logic.
+The implementation is **100% compliant** with the official **Supervisor
+message-passing protocol**.
 
-Deployment: It is an HTTP API-based agent.
+## ✨ Key Features
 
-Communication: It communicates with the Supervisor via a JSON "handshake."
+-   **Supervisor-Compliant Protocol**\
+    Fully follows the JSON handshake (`message_id`, `sender`, `type`,
+    `status`, etc.) for both input and output.
 
-Logging & Health Check: It provides a GET /health endpoint as required.
+-   **AI-Powered Documentation**\
+    Uses **Gemini 2.5 Flash** to infer:
 
-AI Agentic Behavior: It uses an LLM (Gemini) to analyze code and generate structured documentation.
+    -   API endpoint summaries
+    -   Descriptions
+    -   Tags
+    -   Request/Response bodies
+    -   Parameter schemas
 
-Memory Strategy: It loads existing_documentation into "short-term memory" to perform updates. If none is provided, it creates a new document.
+-   **Language-Agnostic**\
+    Automatically detects languages if not provided.
 
-How to Run the Agent
+-   **Multi-Modal Input Support**
 
-Install Dependencies:
+    -   Git Repo Mode (`git_repo_url`)
+    -   Zip File Mode (`zip_file_base64`)
+    -   Code Files Mode (`code_files_base64`)
 
+-   **Smart File Discovery**\
+    Detects relevant API files automatically while ignoring junk
+    directories.
+
+-   **Adaptive Memory**\
+    Can generate new documentation or update existing OpenAPI specs.
+
+-   **Detailed Output Structure**\
+    Includes `file_by_file_results` and final `merged_documentation`.
+
+## 🚀 Local Setup
+
+### Prerequisites
+
+-   Node.js v20+
+-   Gemini API Key
+
+### Installation
+
+``` bash
+git clone <your-repo-url>
+cd documentation-generator-agent
 npm install
+```
 
+### Environment Variables
 
-Run the Agent Server:
+Create `.env`:
 
+    GEMINI_API_KEY=YOUR_API_KEY_HERE
+
+### Run
+
+``` bash
 npm start
+```
 
+Agent runs at:
 
-The server will now be running on http://localhost:3000.
+    http://localhost:3000
 
-API Contract (Handshake)
+## ☁️ Deployment (Render.com)
 
-This agent exposes two endpoints for the Supervisor.
+1.  Push project to GitHub.
 
-1. Health Check
+2.  Create new Render Web Service.
 
-Endpoint: GET /health
+3.  Set:
 
-Description: Allows the Supervisor to confirm the agent is online and ready.
+    -   Build Command: `npm install`
+    -   Start Command: `npm start`
 
-Success Response (200):
+4.  Add environment variable:
 
+        GEMINI_API_KEY=YOUR_API_KEY
+
+Render provides a deployment URL (e.g.,
+`https://doc-agent.onrender.com`).
+
+## 🤝 Supervisor API Contract
+
+### Endpoint
+
+    POST /execute
+    Content-Type: application/json
+
+### Example Supervisor Request
+
+``` json
 {
-  "status": "I'm up and ready",
-  "agent_name": "Documentation Generator Agent (Section C)"
-}
-
-
-2. Execute Task (Updated)
-
-Endpoint: POST /execute
-
-Description: This is the main "work" endpoint. The Supervisor sends code snippets that have changed. The agent analyzes the code with an AI, then updates and returns a complete documentation object.
-
-Request Body (Input):
-
-{
-  "task": "update_documentation",
-  "existing_documentation": { ... },
-  "changed_files": [
-    {
-      "file_path": "routes/users.js",
-      "code_snippet": "app.post('/api/v1/users', (req, res) => { ... });"
-    }
-  ]
-}
-
-
-Field Descriptions:
-
-task (string, required): Must be "update_documentation".
-
-existing_documentation (object, optional): The complete, old openapi.json object.
-
-If provided: The agent will update this object (its "memory").
-
-If null or omitted: The agent will create a new documentation object from scratch.
-
-changed_files (array, required): A list of file objects, each containing the code snippet to be analyzed.
-
-Success Response (200) (Output):
-
-{
-  "status": "success",
-  "message": "Documentation successfully processed for 1 endpoint(s).",
-  "updated_documentation": {
-    "openapi": "3.0.0",
-    "info": { ... },
-    "paths": {
-      "/api/v1/users": {
-        "post": {
-          "summary": "Creates a new user.",
-          "description": "This endpoint adds a new user to the database.",
-          "tags": ["Users"]
-        }
-      }
-    }
+  "message_id": "uuid-from-supervisor-123",
+  "sender": "supervisor",
+  "recipient": "documentation_generator_agent",
+  "type": "task_assignment",
+  "related_message_id": null,
+  "status": "pending",
+  "timestamp": "2025-11-15T12:00:00Z",
+  "results/task": {
+    "language": "javascript",
+    "git_repo_url": "https://github.com/user/repo.git",
+    "zip_file_base64": null,
+    "code_files_base64": null,
+    "existing_documentation": null,
+    "search_patterns": ["**/routes/**"]
   }
 }
+```
 
+## Successful Response
 
-Error Response (500):
-
+``` json
 {
-  "status": "error",
-  "message": "An error occurred while processing code snippets with the AI.",
-  "error": "Gemini API call failed with status: 500",
-  "updated_documentation": { ... }
+  "message_id": "doc-agent-uuid-456",
+  "sender": "documentation_generator_agent",
+  "recipient": "supervisor",
+  "type": "task_response",
+  "related_message_id": "uuid-from-supervisor-123",
+  "status": "completed",
+  "timestamp": "2025-11-15T12:01:00Z",
+  "results/task": {
+    "status_message": "Documentation successfully processed for 7 endpoint(s).",
+    "endpoints_found": 7,
+    "file_by_file_results": [],
+    "merged_documentation": {}
+  }
 }
+```
+
+## Failure Response
+
+``` json
+{
+  "message_id": "doc-agent-uuid-789",
+  "sender": "documentation_generator_agent",
+  "recipient": "supervisor",
+  "type": "task_response",
+  "related_message_id": "uuid-from-supervisor-123",
+  "status": "failed",
+  "timestamp": "2025-11-15T12:01:00Z",
+  "results/task": {
+    "status_message": "An error occurred while processing the task.",
+    "error_details": "Failed to process git repo: Repository not found."
+  }
+}
+```
