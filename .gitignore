@@ -6,3 +6,5 @@ node_modules
 .env
 temp.txt
 index.html
+temporaryFile.txt
+documentation.json
