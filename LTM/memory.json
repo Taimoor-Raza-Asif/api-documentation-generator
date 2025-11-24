@@ -1,0 +1,2905 @@
+{
+  "19ac8d59873a74fc229f99a4a4116fc91c70c3bb86ff29b577bdbaf007007830": {
+    "result": {
+      "status_message": "Processed 2 endpoints.",
+      "endpoints_found": 2,
+      "file_by_file_results": [
+        {
+          "file_path": "app.js",
+          "language_detected": "javascript",
+          "endpoints_found": 2,
+          "documentation": [
+            {
+              "path": "/health",
+              "method": "GET",
+              "summary": "Health Check",
+              "description": "Returns the operational status and name of the agent, confirming it is ready to receive tasks from the Supervisor.",
+              "requestBodySchema": null,
+              "successResponseSchema": "{\"type\":\"object\",\"properties\":{\"status\":{\"type\":\"string\",\"example\":\"I'm up\"},\"agent_name\":{\"type\":\"string\",\"example\":\"Doc Agent (Smart LTM)\"}},\"required\":[\"status\",\"agent_name\"]}",
+              "errorResponses": []
+            },
+            {
+              "path": "/execute",
+              "method": "POST",
+              "summary": "Execute Documentation Generation Task (Supervisor Compliant)",
+              "description": "This is the main operational endpoint, compliant with the Supervisor pattern. It receives a task assignment (containing code, git URL, or zip file) and returns the generated OpenAPI documentation. It utilizes Long-Term Memory (LTM) to cache and retrieve results for identical tasks based on input hashing.",
+              "requestBodySchema": "{\"type\":\"object\",\"properties\":{\"message_id\":{\"type\":\"string\",\"description\":\"Unique ID for the message.\"},\"sender\":{\"type\":\"string\",\"example\":\"supervisor\"},\"recipient\":{\"type\":\"string\",\"example\":\"documentation_generator_agent\"},\"type\":{\"type\":\"string\",\"enum\":[\"task_assignment\"]},\"related_message_id\":{\"type\":\"string\",\"description\":\"ID of the task request.\"},\"results/task\":{\"type\":\"object\",\"properties\":{\"language\":{\"type\":\"string\",\"description\":\"Target language (e.g., javascript, python).\"},\"git_repo_url\":{\"type\":\"string\",\"description\":\"Optional Git repository URL for cloning.\"},\"zip_file_base64\":{\"type\":\"string\",\"description\":\"Optional Base64 encoded zip archive of the project.\"},\"code_files_base64\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"file_path\":{\"type\":\"string\"},\"content_base64\":{\"type\":\"string\"}}},\"description\":\"Optional array of file objects with content_base64.\"},\"search_patterns\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Optional glob patterns for file search (e.g., **/*routes*/**).\"},\"existing_documentation\":{\"type\":\"object\",\"description\":\"Optional existing OpenAPI documentation object to merge with.\"}},\"required\":[\"language\"]}},\"required\":[\"type\",\"results/task\"]}",
+              "successResponseSchema": "{\"type\":\"object\",\"properties\":{\"message_id\":{\"type\":\"string\"},\"sender\":{\"type\":\"string\",\"example\":\"documentation_generator_agent\"},\"recipient\":{\"type\":\"string\",\"example\":\"supervisor\"},\"type\":{\"type\":\"string\",\"enum\":[\"task_response\"]},\"related_message_id\":{\"type\":\"string\"},\"status\":{\"type\":\"string\",\"enum\":[\"completed\"]},\"results/task\":{\"type\":\"object\",\"properties\":{\"status_message\":{\"type\":\"string\"},\"endpoints_found\":{\"type\":\"integer\"},\"ltm_hit\":{\"type\":\"boolean\",\"description\":\"True if the result was served from LTM.\"},\"file_by_file_results\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Results broken down by processed file.\",\"properties\":{\"file_path\":{\"type\":\"string\"},\"endpoints_found\":{\"type\":\"integer\"},\"documentation\":{\"type\":\"array\"}}}},\"merged_documentation\":{\"type\":\"object\",\"description\":\"The generated or merged OpenAPI documentation object.\"}}}},\"required\":[\"message_id\",\"sender\",\"recipient\",\"type\",\"status\",\"results/task\"]}",
+              "errorResponses": [
+                {
+                  "code": "400",
+                  "description": "Invalid message type received (must be 'task_assignment')."
+                },
+                {
+                  "code": "500",
+                  "description": "Internal error during the agentic loop (e.g., AI failure, file processing error, or configuration issue). Details provided in results/task.error_details."
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "merged_documentation": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "API Docs",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/health": {
+            "get": {
+              "summary": "Health Check",
+              "description": "Returns the operational status and name of the agent, confirming it is ready to receive tasks from the Supervisor.",
+              "tags": [
+                "health"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "example": "I'm up"
+                          },
+                          "agent_name": {
+                            "type": "string",
+                            "example": "Doc Agent (Smart LTM)"
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "agent_name"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/execute": {
+            "post": {
+              "summary": "Execute Documentation Generation Task (Supervisor Compliant)",
+              "description": "This is the main operational endpoint, compliant with the Supervisor pattern. It receives a task assignment (containing code, git URL, or zip file) and returns the generated OpenAPI documentation. It utilizes Long-Term Memory (LTM) to cache and retrieve results for identical tasks based on input hashing.",
+              "tags": [
+                "execute"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message_id": {
+                            "type": "string"
+                          },
+                          "sender": {
+                            "type": "string",
+                            "example": "documentation_generator_agent"
+                          },
+                          "recipient": {
+                            "type": "string",
+                            "example": "supervisor"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "task_response"
+                            ]
+                          },
+                          "related_message_id": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "completed"
+                            ]
+                          },
+                          "results/task": {
+                            "type": "object",
+                            "properties": {
+                              "status_message": {
+                                "type": "string"
+                              },
+                              "endpoints_found": {
+                                "type": "integer"
+                              },
+                              "ltm_hit": {
+                                "type": "boolean",
+                                "description": "True if the result was served from LTM."
+                              },
+                              "file_by_file_results": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "description": "Results broken down by processed file.",
+                                  "properties": {
+                                    "file_path": {
+                                      "type": "string"
+                                    },
+                                    "endpoints_found": {
+                                      "type": "integer"
+                                    },
+                                    "documentation": {
+                                      "type": "array"
+                                    }
+                                  }
+                                }
+                              },
+                              "merged_documentation": {
+                                "type": "object",
+                                "description": "The generated or merged OpenAPI documentation object."
+                              }
+                            }
+                          }
+                        },
+                        "required": [
+                          "message_id",
+                          "sender",
+                          "recipient",
+                          "type",
+                          "status",
+                          "results/task"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "400": {
+                  "description": "Invalid message type received (must be 'task_assignment')."
+                },
+                "500": {
+                  "description": "Internal error during the agentic loop (e.g., AI failure, file processing error, or configuration issue). Details provided in results/task.error_details."
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "message_id": {
+                          "type": "string",
+                          "description": "Unique ID for the message."
+                        },
+                        "sender": {
+                          "type": "string",
+                          "example": "supervisor"
+                        },
+                        "recipient": {
+                          "type": "string",
+                          "example": "documentation_generator_agent"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "task_assignment"
+                          ]
+                        },
+                        "related_message_id": {
+                          "type": "string",
+                          "description": "ID of the task request."
+                        },
+                        "results/task": {
+                          "type": "object",
+                          "properties": {
+                            "language": {
+                              "type": "string",
+                              "description": "Target language (e.g., javascript, python)."
+                            },
+                            "git_repo_url": {
+                              "type": "string",
+                              "description": "Optional Git repository URL for cloning."
+                            },
+                            "zip_file_base64": {
+                              "type": "string",
+                              "description": "Optional Base64 encoded zip archive of the project."
+                            },
+                            "code_files_base64": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "file_path": {
+                                    "type": "string"
+                                  },
+                                  "content_base64": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "description": "Optional array of file objects with content_base64."
+                            },
+                            "search_patterns": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "description": "Optional glob patterns for file search (e.g., **/*routes*/**)."
+                            },
+                            "existing_documentation": {
+                              "type": "object",
+                              "description": "Optional existing OpenAPI documentation object to merge with."
+                            }
+                          },
+                          "required": [
+                            "language"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "results/task"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ltm_hit": false
+    },
+    "timestamp": "2025-11-18T12:55:42.585Z"
+  },
+  "12f43ce1c12275eddc0b2a4c6606331dbeecca0cd0425054a6b62c4442682896": {
+    "result": {
+      "status_message": "Processed 2 endpoints.",
+      "endpoints_found": 2,
+      "file_by_file_results": [
+        {
+          "file_path": "app.js",
+          "language_detected": "javascript",
+          "endpoints_found": 2,
+          "documentation": [
+            {
+              "path": "/health",
+              "method": "GET",
+              "summary": "Health check endpoint for monitoring agent status.",
+              "description": "Returns the operational status of the Documentation Generator Agent (LTM-Enabled) and its name.",
+              "requestBodySchema": null,
+              "successResponseSchema": "{\"type\":\"object\",\"properties\":{\"status\":{\"type\":\"string\",\"example\":\"I'm up and ready\"},\"agent_name\":{\"type\":\"string\",\"example\":\"Doc Agent (Smart LTM)\"}},\"required\":[\"status\",\"agent_name\"]}",
+              "errorResponses": []
+            },
+            {
+              "path": "/execute",
+              "method": "POST",
+              "summary": "Executes a task assignment received from a Supervisor agent.",
+              "description": "Receives a Supervisor-compliant task assignment containing code source (Git URL, Base64 files, or Zip), analyzes it for API endpoints (using LTM if available), and returns the generated or merged OpenAPI documentation.",
+              "requestBodySchema": "{\"type\":\"object\",\"properties\":{\"message_id\":{\"type\":\"string\"},\"sender\":{\"type\":\"string\"},\"recipient\":{\"type\":\"string\"},\"type\":{\"type\":\"string\",\"enum\":[\"task_assignment\"]},\"results/task\":{\"type\":\"object\",\"properties\":{\"language\":{\"type\":\"string\",\"description\":\"Programming language to analyze (e.g., javascript, python).\"},\"git_repo_url\":{\"type\":\"string\",\"nullable\":true,\"description\":\"URL of the Git repository to clone and analyze.\"},\"search_patterns\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"nullable\":true,\"description\":\"Glob patterns for files to include in analysis.\"},\"zip_file_base64\":{\"type\":\"string\",\"nullable\":true,\"description\":\"Base64 encoded zip file content for analysis.\"},\"code_files_base64\":{\"type\":\"array\",\"nullable\":true,\"description\":\"Array of specific code file objects, each with file_path and content_base64.\"},\"existing_documentation\":{\"type\":\"object\",\"nullable\":true,\"description\":\"Existing OpenAPI documentation (JSON object) to be merged with new findings.\"}},\"required\":[\"language\"]}},\"required\":[\"message_id\",\"type\",\"results/task\"]}",
+              "successResponseSchema": "{\"type\":\"object\",\"properties\":{\"message_id\":{\"type\":\"string\"},\"sender\":{\"type\":\"string\",\"example\":\"documentation_generator_agent\"},\"recipient\":{\"type\":\"string\",\"example\":\"supervisor\"},\"type\":{\"type\":\"string\",\"enum\":[\"task_response\"]},\"related_message_id\":{\"type\":\"string\"},\"status\":{\"type\":\"string\",\"enum\":[\"completed\"]},\"results/task\":{\"type\":\"object\",\"properties\":{\"status_message\":{\"type\":\"string\",\"description\":\"A high-level message about the execution status (e.g., LTM Hit or number of endpoints found).\"},\"endpoints_found\":{\"type\":\"integer\"},\"file_by_file_results\":{\"type\":\"array\"},\"merged_documentation\":{\"type\":\"object\",\"description\":\"The final OpenAPI 3.0 specification.\"}},\"required\":[\"status_message\",\"endpoints_found\",\"merged_documentation\"]}},\"required\":[\"message_id\",\"status\",\"results/task\"]}",
+              "errorResponses": [
+                {
+                  "code": "400",
+                  "description": "Invalid message type. Expecting 'task_assignment'."
+                },
+                {
+                  "code": "500",
+                  "description": "Internal server error or failure during the agentic loop (e.g., Git failure, AI API error, or file processing error). Returns a Supervisor-compliant error response."
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "merged_documentation": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "API Docs",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/health": {
+            "get": {
+              "summary": "Health check endpoint for monitoring agent status.",
+              "description": "Returns the operational status of the Documentation Generator Agent (LTM-Enabled) and its name.",
+              "tags": [
+                "health"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "example": "I'm up and ready"
+                          },
+                          "agent_name": {
+                            "type": "string",
+                            "example": "Doc Agent (Smart LTM)"
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "agent_name"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/execute": {
+            "post": {
+              "summary": "Executes a task assignment received from a Supervisor agent.",
+              "description": "Receives a Supervisor-compliant task assignment containing code source (Git URL, Base64 files, or Zip), analyzes it for API endpoints (using LTM if available), and returns the generated or merged OpenAPI documentation.",
+              "tags": [
+                "execute"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message_id": {
+                            "type": "string"
+                          },
+                          "sender": {
+                            "type": "string",
+                            "example": "documentation_generator_agent"
+                          },
+                          "recipient": {
+                            "type": "string",
+                            "example": "supervisor"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "task_response"
+                            ]
+                          },
+                          "related_message_id": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "completed"
+                            ]
+                          },
+                          "results/task": {
+                            "type": "object",
+                            "properties": {
+                              "status_message": {
+                                "type": "string",
+                                "description": "A high-level message about the execution status (e.g., LTM Hit or number of endpoints found)."
+                              },
+                              "endpoints_found": {
+                                "type": "integer"
+                              },
+                              "file_by_file_results": {
+                                "type": "array"
+                              },
+                              "merged_documentation": {
+                                "type": "object",
+                                "description": "The final OpenAPI 3.0 specification."
+                              }
+                            },
+                            "required": [
+                              "status_message",
+                              "endpoints_found",
+                              "merged_documentation"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "message_id",
+                          "status",
+                          "results/task"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "400": {
+                  "description": "Invalid message type. Expecting 'task_assignment'."
+                },
+                "500": {
+                  "description": "Internal server error or failure during the agentic loop (e.g., Git failure, AI API error, or file processing error). Returns a Supervisor-compliant error response."
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "message_id": {
+                          "type": "string"
+                        },
+                        "sender": {
+                          "type": "string"
+                        },
+                        "recipient": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "task_assignment"
+                          ]
+                        },
+                        "results/task": {
+                          "type": "object",
+                          "properties": {
+                            "language": {
+                              "type": "string",
+                              "description": "Programming language to analyze (e.g., javascript, python)."
+                            },
+                            "git_repo_url": {
+                              "type": "string",
+                              "nullable": true,
+                              "description": "URL of the Git repository to clone and analyze."
+                            },
+                            "search_patterns": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "nullable": true,
+                              "description": "Glob patterns for files to include in analysis."
+                            },
+                            "zip_file_base64": {
+                              "type": "string",
+                              "nullable": true,
+                              "description": "Base64 encoded zip file content for analysis."
+                            },
+                            "code_files_base64": {
+                              "type": "array",
+                              "nullable": true,
+                              "description": "Array of specific code file objects, each with file_path and content_base64."
+                            },
+                            "existing_documentation": {
+                              "type": "object",
+                              "nullable": true,
+                              "description": "Existing OpenAPI documentation (JSON object) to be merged with new findings."
+                            }
+                          },
+                          "required": [
+                            "language"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "message_id",
+                        "type",
+                        "results/task"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ltm_hit": false
+    },
+    "timestamp": "2025-11-18T12:57:31.436Z"
+  },
+  "16646cf21f380c614973d508543bef06aee1366fa992311e89f18d796b07e223": {
+    "result": {
+      "status_message": "Processed 4 endpoints.",
+      "endpoints_found": 4,
+      "file_by_file_results": [
+        {
+          "file_path": "routes\\eventRoutes.js",
+          "language_detected": "javascript",
+          "endpoints_found": 2,
+          "documentation": [
+            {
+              "path": "/",
+              "method": "POST",
+              "summary": "Create a new event",
+              "description": "Creates a new event record. Requires user authentication.",
+              "requestBodySchema": "JSON object containing event details (e.g., title, description, date).",
+              "successResponseSchema": "JSON object representing the newly created event.",
+              "errorResponses": [
+                "401 Unauthorized",
+                "400 Bad Request (Validation Error)",
+                "500 Internal Server Error"
+              ]
+            },
+            {
+              "path": "/",
+              "method": "GET",
+              "summary": "Retrieve all events",
+              "description": "Fetches a list of all events accessible to the authenticated user.",
+              "requestBodySchema": "None",
+              "successResponseSchema": "Array of JSON objects, each representing an event.",
+              "errorResponses": [
+                "401 Unauthorized",
+                "500 Internal Server Error"
+              ]
+            }
+          ]
+        },
+        {
+          "file_path": "routes\\authRoutes.js",
+          "language_detected": "javascript",
+          "endpoints_found": 2,
+          "documentation": [
+            {
+              "path": "/register",
+              "method": "POST",
+              "summary": "Register a new user",
+              "description": "Creates a new user account using provided credentials (e.g., email, password, and optionally name).",
+              "requestBodySchema": "{\"type\": \"object\", \"properties\": {\"email\": {\"type\": \"string\"}, \"password\": {\"type\": \"string\"}}}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"message\": {\"type\": \"string\", \"example\": \"User registered successfully\"}, \"userId\": {\"type\": \"string\"}}}",
+              "errorResponses": [
+                "400 Bad Request (Invalid input)",
+                "409 Conflict (User already exists)"
+              ]
+            },
+            {
+              "path": "/login",
+              "method": "POST",
+              "summary": "Log in a user",
+              "description": "Authenticates the user using credentials and typically returns an authentication token (JWT) upon successful login.",
+              "requestBodySchema": "{\"type\": \"object\", \"properties\": {\"email\": {\"type\": \"string\"}, \"password\": {\"type\": \"string\"}}}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"token\": {\"type\": \"string\", \"description\": \"Authentication JWT\"}, \"user\": {\"type\": \"object\"}}}",
+              "errorResponses": [
+                "400 Bad Request (Missing credentials)",
+                "401 Unauthorized (Invalid credentials)"
+              ]
+            }
+          ]
+        }
+      ],
+      "merged_documentation": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "API Docs",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/": {
+            "post": {
+              "summary": "Create a new event",
+              "description": "Creates a new event record. Requires user authentication.",
+              "tags": [
+                "default"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "get": {
+              "summary": "Retrieve all events",
+              "description": "Fetches a list of all events accessible to the authenticated user.",
+              "tags": [
+                "default"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/register": {
+            "post": {
+              "summary": "Register a new user",
+              "description": "Creates a new user account using provided credentials (e.g., email, password, and optionally name).",
+              "tags": [
+                "register"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "example": "User registered successfully"
+                          },
+                          "userId": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "type": "string"
+                        },
+                        "password": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/login": {
+            "post": {
+              "summary": "Log in a user",
+              "description": "Authenticates the user using credentials and typically returns an authentication token (JWT) upon successful login.",
+              "tags": [
+                "login"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "token": {
+                            "type": "string",
+                            "description": "Authentication JWT"
+                          },
+                          "user": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "type": "string"
+                        },
+                        "password": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ltm_hit": false
+    },
+    "timestamp": "2025-11-18T12:58:45.608Z"
+  },
+  "5d8c82274852d9ea005004d31102e8ffdd991f012fa675f892be74b84bc8c597": {
+    "result": {
+      "status_message": "Processed 4 endpoints.",
+      "endpoints_found": 4,
+      "file_by_file_results": [
+        {
+          "file_path": "routes\\eventRoutes.js",
+          "language_detected": "javascript",
+          "endpoints_found": 2,
+          "documentation": [
+            {
+              "path": "/",
+              "method": "POST",
+              "summary": "Create a new event",
+              "description": "Requires authentication (auth middleware). Creates a new event resource.",
+              "requestBodySchema": "JSON object representing the event details (e.g., title, date, description).",
+              "successResponseSchema": "The newly created Event object, usually including an ID.",
+              "errorResponses": [
+                "401 Unauthorized (Missing or invalid token)",
+                "400 Bad Request (Validation failure or missing required fields)"
+              ]
+            },
+            {
+              "path": "/",
+              "method": "GET",
+              "summary": "Retrieve a list of all events",
+              "description": "Requires authentication (auth middleware). Fetches an array of event resources.",
+              "requestBodySchema": "None",
+              "successResponseSchema": "Array of Event objects.",
+              "errorResponses": [
+                "401 Unauthorized (Missing or invalid token)",
+                "500 Internal Server Error"
+              ]
+            }
+          ]
+        },
+        {
+          "file_path": "routes\\authRoutes.js",
+          "language_detected": "javascript",
+          "endpoints_found": 2,
+          "documentation": [
+            {
+              "path": "/register",
+              "method": "POST",
+              "summary": "Register a new user account.",
+              "description": "Handles user registration by accepting credentials and creating a new user record in the database.",
+              "requestBodySchema": "{\"email\": \"string\", \"password\": \"string\", \"username\": \"string (optional)\"}",
+              "successResponseSchema": "{\"token\": \"string\", \"userId\": \"number\", \"message\": \"User successfully registered\"}",
+              "errorResponses": "400: Invalid input, 409: User already exists"
+            },
+            {
+              "path": "/login",
+              "method": "POST",
+              "summary": "Authenticate user and generate an access token.",
+              "description": "Handles user login by verifying credentials and returning an authentication token.",
+              "requestBodySchema": "{\"email\": \"string\", \"password\": \"string\"}",
+              "successResponseSchema": "{\"token\": \"string\", \"userId\": \"number\"}",
+              "errorResponses": "400: Invalid input, 401: Invalid credentials"
+            }
+          ]
+        }
+      ],
+      "merged_documentation": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "API Docs",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/": {
+            "post": {
+              "summary": "Create a new event",
+              "description": "Requires authentication (auth middleware). Creates a new event resource.",
+              "tags": [
+                "default"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "get": {
+              "summary": "Retrieve a list of all events",
+              "description": "Requires authentication (auth middleware). Fetches an array of event resources.",
+              "tags": [
+                "default"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/register": {
+            "post": {
+              "summary": "Register a new user account.",
+              "description": "Handles user registration by accepting credentials and creating a new user record in the database.",
+              "tags": [
+                "register"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "token": "string",
+                        "userId": "number",
+                        "message": "User successfully registered"
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "email": "string",
+                      "password": "string",
+                      "username": "string (optional)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/login": {
+            "post": {
+              "summary": "Authenticate user and generate an access token.",
+              "description": "Handles user login by verifying credentials and returning an authentication token.",
+              "tags": [
+                "login"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "token": "string",
+                        "userId": "number"
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "email": "string",
+                      "password": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ltm_hit": false
+    },
+    "timestamp": "2025-11-24T10:24:53.660Z"
+  },
+  "12f8e77f81ca7c6ce3eb34c42c00f8735ad46780eca70ece8191f7a4a4448185": {
+    "result": {
+      "status_message": "Processed 5 endpoints.",
+      "endpoints_found": 5,
+      "file_by_file_results": [
+        {
+          "file_path": "authService.ts",
+          "language_detected": "javascript",
+          "endpoints_found": 5,
+          "documentation": [
+            {
+              "path": "/auth/login",
+              "method": "POST",
+              "summary": "Login user and generate auth token.",
+              "description": "Authenticates the user using credentials and returns the user object and a new authentication token.",
+              "requestBodySchema": "LoginCredentials { email: string, password: string }",
+              "successResponseSchema": "{ data: { user: User, token: AuthToken } }",
+              "errorResponses": "400, 401"
+            },
+            {
+              "path": "/auth/register",
+              "method": "POST",
+              "summary": "Register a new user account.",
+              "description": "Creates a new user account with provided data, logs the user in, and returns the user object and a new authentication token.",
+              "requestBodySchema": "RegisterData { email: string, password: string, ... }",
+              "successResponseSchema": "{ data: { user: User, token: AuthToken } }",
+              "errorResponses": "400, 409 (Conflict)"
+            },
+            {
+              "path": "/auth/logout",
+              "method": "POST",
+              "summary": "Logout the current user.",
+              "description": "Invalidates the current session or refresh token on the server side.",
+              "requestBodySchema": "null",
+              "successResponseSchema": "void",
+              "errorResponses": "500"
+            },
+            {
+              "path": "/auth/token/refresh",
+              "method": "POST",
+              "summary": "Refresh authentication token.",
+              "description": "Uses the existing authentication mechanism (e.g., refresh token cookie) to obtain a new access token.",
+              "requestBodySchema": "null",
+              "successResponseSchema": "{ data: { token: AuthToken } }",
+              "errorResponses": "401 (Expired session)"
+            },
+            {
+              "path": "/users/me",
+              "method": "PATCH",
+              "summary": "Update current user profile.",
+              "description": "Updates fields of the currently authenticated user's profile.",
+              "requestBodySchema": "Partial<User>",
+              "successResponseSchema": "{ data: { user: User } }",
+              "errorResponses": "400, 401"
+            }
+          ]
+        }
+      ],
+      "merged_documentation": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "API Docs",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/auth/login": {
+            "post": {
+              "summary": "Login user and generate auth token.",
+              "description": "Authenticates the user using credentials and returns the user object and a new authentication token.",
+              "tags": [
+                "auth"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/auth/register": {
+            "post": {
+              "summary": "Register a new user account.",
+              "description": "Creates a new user account with provided data, logs the user in, and returns the user object and a new authentication token.",
+              "tags": [
+                "auth"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/auth/logout": {
+            "post": {
+              "summary": "Logout the current user.",
+              "description": "Invalidates the current session or refresh token on the server side.",
+              "tags": [
+                "auth"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/auth/token/refresh": {
+            "post": {
+              "summary": "Refresh authentication token.",
+              "description": "Uses the existing authentication mechanism (e.g., refresh token cookie) to obtain a new access token.",
+              "tags": [
+                "auth"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/users/me": {
+            "patch": {
+              "summary": "Update current user profile.",
+              "description": "Updates fields of the currently authenticated user's profile.",
+              "tags": [
+                "users"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ltm_hit": false
+    },
+    "timestamp": "2025-11-24T10:53:35.138Z"
+  },
+  "2a8fd2e64835893ac41efe4ffe68caa1f12d2666b01f8639be84856a40b4e117": {
+    "result": {
+      "status_message": "Processed 2 endpoints.",
+      "endpoints_found": 2,
+      "file_by_file_results": [
+        {
+          "file_path": "StudentApi\\src\\main\\java\\com\\example\\studentapi\\controller\\StudentController.java",
+          "language_detected": "java",
+          "endpoints_found": 2,
+          "documentation": [
+            {
+              "path": "/api/students",
+              "method": "GET",
+              "summary": "Retrieve a list of all students.",
+              "description": "Returns a list of all existing Student objects.",
+              "requestBodySchema": "N/A",
+              "successResponseSchema": "List<Student>",
+              "errorResponses": []
+            },
+            {
+              "path": "/api/students",
+              "method": "POST",
+              "summary": "Create a new student.",
+              "description": "Adds a new student record to the system.",
+              "requestBodySchema": "Student (object)",
+              "successResponseSchema": "Student",
+              "errorResponses": []
+            }
+          ]
+        }
+      ],
+      "merged_documentation": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "API Docs",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/api/students": {
+            "get": {
+              "summary": "Retrieve a list of all students.",
+              "description": "Returns a list of all existing Student objects.",
+              "tags": [
+                "api"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "post": {
+              "summary": "Create a new student.",
+              "description": "Adds a new student record to the system.",
+              "tags": [
+                "api"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ltm_hit": false
+    },
+    "timestamp": "2025-11-24T10:59:45.306Z"
+  },
+  "dda71ab55a463e1ca1106164240cbe4f94c94654464cff7bf9962eb0a9c87e1a": {
+    "result": {
+      "status_message": "Processed 2 endpoints.",
+      "endpoints_found": 2,
+      "file_by_file_results": [
+        {
+          "file_path": "authRoutes.js",
+          "language_detected": "javascript",
+          "endpoints_found": 2,
+          "documentation": [
+            {
+              "path": "/login",
+              "method": "POST",
+              "summary": "User login and authentication",
+              "description": "Authenticates a user using credentials and returns an authentication token or session identifier.",
+              "requestBodySchema": "{\"email\": \"string\", \"password\": \"string\"}",
+              "successResponseSchema": "{\"token\": \"string\", \"expiresIn\": \"number\"}",
+              "errorResponses": [
+                400,
+                401
+              ]
+            },
+            {
+              "path": "/register",
+              "method": "POST",
+              "summary": "Register a new user account",
+              "description": "Creates a new user account by accepting required registration details (e.g., username, email, password).",
+              "requestBodySchema": "{\"username\": \"string\", \"email\": \"string\", \"password\": \"string\"}",
+              "successResponseSchema": "{\"message\": \"User registered successfully\", \"userId\": \"string\"}",
+              "errorResponses": [
+                400,
+                409
+              ]
+            }
+          ]
+        }
+      ],
+      "merged_documentation": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "API Docs",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/login": {
+            "post": {
+              "summary": "User login and authentication",
+              "description": "Authenticates a user using credentials and returns an authentication token or session identifier.",
+              "tags": [
+                "login"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "token": "string",
+                        "expiresIn": "number"
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "email": "string",
+                      "password": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/register": {
+            "post": {
+              "summary": "Register a new user account",
+              "description": "Creates a new user account by accepting required registration details (e.g., username, email, password).",
+              "tags": [
+                "register"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "message": "User registered successfully",
+                        "userId": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "username": "string",
+                      "email": "string",
+                      "password": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ltm_hit": false
+    },
+    "timestamp": "2025-11-24T11:02:25.838Z"
+  },
+  "b52a2de8297e86187e4a9df9524b13eb5e5771bb715c6e58347dfce34a9c7388": {
+    "result": {
+      "status_message": "Processed 18 endpoints.",
+      "endpoints_found": 18,
+      "file_by_file_results": [
+        {
+          "file_path": "studentRoutes.js",
+          "language_detected": "javascript",
+          "endpoints_found": 18,
+          "documentation": [
+            {
+              "path": "/my-data/:id",
+              "method": "GET",
+              "summary": "Get authenticated student's profile data by ID or associated profile ID.",
+              "description": "Allows students to fetch their own profile, or Admins/Teachers/Accountants to fetch specific student data. Authentication required. Roles: student, admin, teacher, accountant.",
+              "requestBodySchema": "{}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"_id\": {\"type\": \"string\"}, \"name\": {\"type\": \"string\"}, \"enrollmentDate\": {\"type\": \"string\", \"format\": \"date-time\"}, \"feeStatus\": {\"type\": \"string\"}, \"documents\": {\"type\": \"object\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 404: Not Found"
+            },
+            {
+              "path": "/profile/:id",
+              "method": "GET",
+              "summary": "Get specific student profile by ID.",
+              "description": "Allows students to fetch their own profile, or Admins/Teachers/Accountants to fetch specific student data. Authentication required. Roles: student, admin, teacher, accountant.",
+              "requestBodySchema": "{}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"_id\": {\"type\": \"string\"}, \"name\": {\"type\": \"string\"}, \"enrollmentDate\": {\"type\": \"string\", \"format\": \"date-time\"}, \"feeStatus\": {\"type\": \"string\"}, \"documents\": {\"type\": \"object\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 404: Not Found"
+            },
+            {
+              "path": "/promote-semester",
+              "method": "PUT",
+              "summary": "Bulk promote students to the next semester based on criteria.",
+              "description": "Promotes a batch of students (e.g., all students in a specific class or semester) to the subsequent semester. Requires Admin or Teacher roles.",
+              "requestBodySchema": "{\"type\": \"object\", \"properties\": {\"filter\": {\"type\": \"object\", \"description\": \"Criteria to select students (e.g., currentClassId, currentSemester)\"}, \"newSemester\": {\"type\": \"integer\"}}}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"message\": {\"type\": \"string\"}, \"updatedCount\": {\"type\": \"integer\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 500: Server Error"
+            },
+            {
+              "path": "/demote-semester",
+              "method": "PUT",
+              "summary": "Bulk demote students to the previous semester based on criteria.",
+              "description": "Demotes a batch of students to the previous semester. Requires Admin or Teacher roles.",
+              "requestBodySchema": "{\"type\": \"object\", \"properties\": {\"filter\": {\"type\": \"object\", \"description\": \"Criteria to select students (e.g., currentClassId, currentSemester)\"}, \"previousSemester\": {\"type\": \"integer\"}}}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"message\": {\"type\": \"string\"}, \"updatedCount\": {\"type\": \"integer\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 500: Server Error"
+            },
+            {
+              "path": "/promote-class",
+              "method": "PUT",
+              "summary": "Bulk promote students to the next academic class based on criteria.",
+              "description": "Promotes a batch of students (e.g., all students in a specific class) to the next academic class. Requires Admin or Teacher roles.",
+              "requestBodySchema": "{\"type\": \"object\", \"properties\": {\"filter\": {\"type\": \"object\", \"description\": \"Criteria to select students (e.g., currentClassId)\"}, \"newClassId\": {\"type\": \"string\"}}}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"message\": {\"type\": \"string\"}, \"updatedCount\": {\"type\": \"integer\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 500: Server Error"
+            },
+            {
+              "path": "/demote-class",
+              "method": "PUT",
+              "summary": "Bulk demote students to the previous academic class based on criteria.",
+              "description": "Demotes a batch of students to the previous academic class. Requires Admin or Teacher roles.",
+              "requestBodySchema": "{\"type\": \"object\", \"properties\": {\"filter\": {\"type\": \"object\", \"description\": \"Criteria to select students (e.g., currentClassId)\"}, \"previousClassId\": {\"type\": \"string\"}}}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"message\": {\"type\": \"string\"}, \"updatedCount\": {\"type\": \"integer\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 500: Server Error"
+            },
+            {
+              "path": "/",
+              "method": "GET",
+              "summary": "Get a list of all students.",
+              "description": "Retrieves a list of all student records. Teachers might see a filtered list based on their subjects. Requires Admin, Teacher, or Accountant roles.",
+              "requestBodySchema": "{}",
+              "successResponseSchema": "{\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"_id\": {\"type\": \"string\"}, \"name\": {\"type\": \"string\"}}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden"
+            },
+            {
+              "path": "/:id",
+              "method": "GET",
+              "summary": "Get a single student by ID.",
+              "description": "Retrieves detailed information for a specific student. Requires Admin, Teacher, Student (self), or Accountant roles.",
+              "requestBodySchema": "{}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"_id\": {\"type\": \"string\"}, \"name\": {\"type\": \"string\"}, \"class\": {\"type\": \"string\"}, \"feeStatus\": {\"type\": \"string\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 404: Not Found"
+            },
+            {
+              "path": "/",
+              "method": "POST",
+              "summary": "Create a new student record with required documents.",
+              "description": "Registers a new student, accepting text fields for student data and multiple file uploads (profile picture and documents). Requires Admin or Accountant roles.",
+              "requestBodySchema": "{\"type\": \"multipart/form-data\", \"properties\": {\"name\": {\"type\": \"string\"}, \"classId\": {\"type\": \"string\"}, \"profilePicture\": {\"type\": \"file\"}, \"cnicFront\": {\"type\": \"file\"}, \"cnicBack\": {\"type\": \"file\"}, \"bForm\": {\"type\": \"file\"}, \"characterCertificate\": {\"type\": \"file\"}, \"previousClassResult\": {\"type\": \"file\"}, \"class10Result\": {\"type\": \"file\"}, \"class12Result\": {\"type\": \"file\"}}}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"_id\": {\"type\": \"string\"}, \"message\": {\"type\": \"string\", \"description\": \"Student created successfully\"}}}",
+              "errorResponses": "400: Bad Request (Missing fields/files), 401: Unauthorized, 403: Forbidden, 500: Server Error"
+            },
+            {
+              "path": "/:id",
+              "method": "PUT",
+              "summary": "Update an existing student record and optional documents.",
+              "description": "Updates student data, optionally replacing existing uploaded documents. Requires Admin, Teacher, Accountant, or Student (self) roles.",
+              "requestBodySchema": "{\"type\": \"multipart/form-data\", \"properties\": {\"name\": {\"type\": \"string\", \"required\": false}, \"classId\": {\"type\": \"string\", \"required\": false}, \"profilePicture\": {\"type\": \"file\", \"required\": false}, \"...\": {\"type\": \"any\"}}}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"_id\": {\"type\": \"string\"}, \"message\": {\"type\": \"string\", \"description\": \"Student updated successfully\"}}}",
+              "errorResponses": "400: Bad Request, 401: Unauthorized, 403: Forbidden, 404: Not Found"
+            },
+            {
+              "path": "/:id",
+              "method": "DELETE",
+              "summary": "Delete a student record by ID.",
+              "description": "Permanently deletes a student record and associated data/files. Requires Admin role.",
+              "requestBodySchema": "{}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"message\": {\"type\": \"string\", \"description\": \"Student deleted successfully\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 404: Not Found"
+            },
+            {
+              "path": "/:id/promote",
+              "method": "PUT",
+              "summary": "Promote a specific student to the next academic level (class or year).",
+              "description": "Increases the academic level of a single student. Requires Admin or Teacher roles.",
+              "requestBodySchema": "{}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"message\": {\"type\": \"string\"}, \"student\": {\"type\": \"object\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 404: Not Found"
+            },
+            {
+              "path": "/:id/demote",
+              "method": "PUT",
+              "summary": "Demote a specific student to the previous academic level (class or year).",
+              "description": "Decreases the academic level of a single student. Requires Admin or Teacher roles.",
+              "requestBodySchema": "{}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"message\": {\"type\": \"string\"}, \"student\": {\"type\": \"object\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 404: Not Found"
+            },
+            {
+              "path": "/:id/promote-semester",
+              "method": "PUT",
+              "summary": "Promote a specific student to the next semester.",
+              "description": "Updates a single student's registered semester. Requires Admin or Teacher roles.",
+              "requestBodySchema": "{}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"message\": {\"type\": \"string\"}, \"student\": {\"type\": \"object\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 404: Not Found"
+            },
+            {
+              "path": "/:id/demote-semester",
+              "method": "PUT",
+              "summary": "Demote a specific student to the previous semester.",
+              "description": "Updates a single student's registered semester to the previous one. Requires Admin or Teacher roles.",
+              "requestBodySchema": "{}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"message\": {\"type\": \"string\"}, \"student\": {\"type\": \"object\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 404: Not Found"
+            },
+            {
+              "path": "/promote",
+              "method": "PATCH",
+              "summary": "Bulk promote multiple students (using filters).",
+              "description": "Promotes a group of students based on criteria provided in the request body. Requires Admin role.",
+              "requestBodySchema": "{\"type\": \"object\", \"properties\": {\"filterCriteria\": {\"type\": \"object\"}, \"newClassId\": {\"type\": \"string\"}, \"academicYear\": {\"type\": \"string\"}}}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"message\": {\"type\": \"string\"}, \"count\": {\"type\": \"integer\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 500: Server Error"
+            },
+            {
+              "path": "/increase-fee",
+              "method": "PATCH",
+              "summary": "Apply a bulk fee increase across filtered students or classes.",
+              "description": "Updates the tuition or associated fees for a selected group of students, typically by a percentage or fixed amount. Requires Admin role.",
+              "requestBodySchema": "{\"type\": \"object\", \"properties\": {\"increaseType\": {\"type\": \"string\", \"enum\": [\"percentage\", \"fixed\"]}, \"amount\": {\"type\": \"number\"}, \"classIds\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}}}}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"message\": {\"type\": \"string\"}, \"updatedCount\": {\"type\": \"integer\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 500: Server Error"
+            },
+            {
+              "path": "/:id/fee-status",
+              "method": "PATCH",
+              "summary": "Update the fee payment status for a specific student.",
+              "description": "Allows updating fields related to student fee payment tracking (e.g., status, last payment date). Requires Admin role.",
+              "requestBodySchema": "{\"type\": \"object\", \"properties\": {\"feeStatus\": {\"type\": \"string\", \"enum\": [\"Paid\", \"Pending\", \"Waived\"]}, \"paymentDate\": {\"type\": \"string\", \"format\": \"date\"}}}",
+              "successResponseSchema": "{\"type\": \"object\", \"properties\": {\"message\": {\"type\": \"string\"}, \"student\": {\"type\": \"object\"}}}",
+              "errorResponses": "401: Unauthorized, 403: Forbidden, 404: Not Found"
+            }
+          ]
+        }
+      ],
+      "merged_documentation": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "API Docs",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/my-data/:id": {
+            "get": {
+              "summary": "Get authenticated student's profile data by ID or associated profile ID.",
+              "description": "Allows students to fetch their own profile, or Admins/Teachers/Accountants to fetch specific student data. Authentication required. Roles: student, admin, teacher, accountant.",
+              "tags": [
+                "my-data"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "enrollmentDate": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "feeStatus": {
+                            "type": "string"
+                          },
+                          "documents": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          },
+          "/profile/:id": {
+            "get": {
+              "summary": "Get specific student profile by ID.",
+              "description": "Allows students to fetch their own profile, or Admins/Teachers/Accountants to fetch specific student data. Authentication required. Roles: student, admin, teacher, accountant.",
+              "tags": [
+                "profile"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "enrollmentDate": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "feeStatus": {
+                            "type": "string"
+                          },
+                          "documents": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          },
+          "/promote-semester": {
+            "put": {
+              "summary": "Bulk promote students to the next semester based on criteria.",
+              "description": "Promotes a batch of students (e.g., all students in a specific class or semester) to the subsequent semester. Requires Admin or Teacher roles.",
+              "tags": [
+                "promote-semester"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "updatedCount": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "filter": {
+                          "type": "object",
+                          "description": "Criteria to select students (e.g., currentClassId, currentSemester)"
+                        },
+                        "newSemester": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/demote-semester": {
+            "put": {
+              "summary": "Bulk demote students to the previous semester based on criteria.",
+              "description": "Demotes a batch of students to the previous semester. Requires Admin or Teacher roles.",
+              "tags": [
+                "demote-semester"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "updatedCount": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "filter": {
+                          "type": "object",
+                          "description": "Criteria to select students (e.g., currentClassId, currentSemester)"
+                        },
+                        "previousSemester": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/promote-class": {
+            "put": {
+              "summary": "Bulk promote students to the next academic class based on criteria.",
+              "description": "Promotes a batch of students (e.g., all students in a specific class) to the next academic class. Requires Admin or Teacher roles.",
+              "tags": [
+                "promote-class"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "updatedCount": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "filter": {
+                          "type": "object",
+                          "description": "Criteria to select students (e.g., currentClassId)"
+                        },
+                        "newClassId": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/demote-class": {
+            "put": {
+              "summary": "Bulk demote students to the previous academic class based on criteria.",
+              "description": "Demotes a batch of students to the previous academic class. Requires Admin or Teacher roles.",
+              "tags": [
+                "demote-class"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "updatedCount": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "filter": {
+                          "type": "object",
+                          "description": "Criteria to select students (e.g., currentClassId)"
+                        },
+                        "previousClassId": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/": {
+            "get": {
+              "summary": "Get a list of all students.",
+              "description": "Retrieves a list of all student records. Teachers might see a filtered list based on their subjects. Requires Admin, Teacher, or Accountant roles.",
+              "tags": [
+                "default"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            },
+            "post": {
+              "summary": "Create a new student record with required documents.",
+              "description": "Registers a new student, accepting text fields for student data and multiple file uploads (profile picture and documents). Requires Admin or Accountant roles.",
+              "tags": [
+                "default"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string",
+                            "description": "Student created successfully"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "multipart/form-data",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "classId": {
+                          "type": "string"
+                        },
+                        "profilePicture": {
+                          "type": "file"
+                        },
+                        "cnicFront": {
+                          "type": "file"
+                        },
+                        "cnicBack": {
+                          "type": "file"
+                        },
+                        "bForm": {
+                          "type": "file"
+                        },
+                        "characterCertificate": {
+                          "type": "file"
+                        },
+                        "previousClassResult": {
+                          "type": "file"
+                        },
+                        "class10Result": {
+                          "type": "file"
+                        },
+                        "class12Result": {
+                          "type": "file"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/:id": {
+            "get": {
+              "summary": "Get a single student by ID.",
+              "description": "Retrieves detailed information for a specific student. Requires Admin, Teacher, Student (self), or Accountant roles.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "class": {
+                            "type": "string"
+                          },
+                          "feeStatus": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            },
+            "put": {
+              "summary": "Update an existing student record and optional documents.",
+              "description": "Updates student data, optionally replacing existing uploaded documents. Requires Admin, Teacher, Accountant, or Student (self) roles.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string",
+                            "description": "Student updated successfully"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "multipart/form-data",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": false
+                        },
+                        "classId": {
+                          "type": "string",
+                          "required": false
+                        },
+                        "profilePicture": {
+                          "type": "file",
+                          "required": false
+                        },
+                        "...": {
+                          "type": "any"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "delete": {
+              "summary": "Delete a student record by ID.",
+              "description": "Permanently deletes a student record and associated data/files. Requires Admin role.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Student deleted successfully"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          },
+          "/:id/promote": {
+            "put": {
+              "summary": "Promote a specific student to the next academic level (class or year).",
+              "description": "Increases the academic level of a single student. Requires Admin or Teacher roles.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "student": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          },
+          "/:id/demote": {
+            "put": {
+              "summary": "Demote a specific student to the previous academic level (class or year).",
+              "description": "Decreases the academic level of a single student. Requires Admin or Teacher roles.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "student": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          },
+          "/:id/promote-semester": {
+            "put": {
+              "summary": "Promote a specific student to the next semester.",
+              "description": "Updates a single student's registered semester. Requires Admin or Teacher roles.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "student": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          },
+          "/:id/demote-semester": {
+            "put": {
+              "summary": "Demote a specific student to the previous semester.",
+              "description": "Updates a single student's registered semester to the previous one. Requires Admin or Teacher roles.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "student": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          },
+          "/promote": {
+            "patch": {
+              "summary": "Bulk promote multiple students (using filters).",
+              "description": "Promotes a group of students based on criteria provided in the request body. Requires Admin role.",
+              "tags": [
+                "promote"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "filterCriteria": {
+                          "type": "object"
+                        },
+                        "newClassId": {
+                          "type": "string"
+                        },
+                        "academicYear": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/increase-fee": {
+            "patch": {
+              "summary": "Apply a bulk fee increase across filtered students or classes.",
+              "description": "Updates the tuition or associated fees for a selected group of students, typically by a percentage or fixed amount. Requires Admin role.",
+              "tags": [
+                "increase-fee"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "updatedCount": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "increaseType": {
+                          "type": "string",
+                          "enum": [
+                            "percentage",
+                            "fixed"
+                          ]
+                        },
+                        "amount": {
+                          "type": "number"
+                        },
+                        "classIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/:id/fee-status": {
+            "patch": {
+              "summary": "Update the fee payment status for a specific student.",
+              "description": "Allows updating fields related to student fee payment tracking (e.g., status, last payment date). Requires Admin role.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "student": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "requestBody": {
+                "description": "Body",
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "feeStatus": {
+                          "type": "string",
+                          "enum": [
+                            "Paid",
+                            "Pending",
+                            "Waived"
+                          ]
+                        },
+                        "paymentDate": {
+                          "type": "string",
+                          "format": "date"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ltm_hit": false
+    },
+    "timestamp": "2025-11-24T11:11:08.114Z"
+  },
+  "281df8df213990167f5299ffb485ffb1d6f7a4033cdedd4c89dd2d80dcb19469": {
+    "result": {
+      "status_message": "Processed 18 endpoints.",
+      "endpoints_found": 18,
+      "file_by_file_results": [
+        {
+          "file_path": "studentRoutes.js",
+          "language_detected": "javascript",
+          "endpoints_found": 18,
+          "documentation": [
+            {
+              "path": "/promote-semester",
+              "method": "PUT",
+              "summary": "Promote all students matching specific criteria (e.g., class/section) to the next semester.",
+              "description": "Requires Admin or Teacher role. Used for bulk semester promotions.",
+              "requestBodySchema": "application/json (e.g., { classId: '...', currentSemester: N, nextSemester: N+1 })",
+              "successResponseSchema": "application/json",
+              "errorResponses": "401, 403, 500"
+            },
+            {
+              "path": "/demote-semester",
+              "method": "PUT",
+              "summary": "Demote all students matching specific criteria to the previous semester.",
+              "description": "Requires Admin or Teacher role. Used for bulk semester demotions.",
+              "requestBodySchema": "application/json (e.g., { classId: '...', currentSemester: N, previousSemester: N-1 })",
+              "successResponseSchema": "application/json",
+              "errorResponses": "401, 403, 500"
+            },
+            {
+              "path": "/promote-class",
+              "method": "PUT",
+              "summary": "Promote all students matching specific criteria to the next class.",
+              "description": "Requires Admin or Teacher role. Used for bulk class promotions.",
+              "requestBodySchema": "application/json (e.g., { currentClassId: '...', nextClassId: '...' })",
+              "successResponseSchema": "application/json",
+              "errorResponses": "401, 403, 500"
+            },
+            {
+              "path": "/demote-class",
+              "method": "PUT",
+              "summary": "Demote all students matching specific criteria to the previous class.",
+              "description": "Requires Admin or Teacher role. Used for bulk class demotions.",
+              "requestBodySchema": "application/json (e.g., { currentClassId: '...', previousClassId: '...' })",
+              "successResponseSchema": "application/json",
+              "errorResponses": "401, 403, 500"
+            },
+            {
+              "path": "/my-data/:id",
+              "method": "GET",
+              "summary": "Get the detailed data for a specific student profile. Used typically by the student themselves or authorized staff.",
+              "description": "Requires Student, Admin, Teacher, or Accountant role. Logic in controller must ensure students can only view their own profile unless authorized.",
+              "requestBodySchema": "null",
+              "successResponseSchema": "application/json (Student Object)",
+              "errorResponses": "401, 403, 404"
+            },
+            {
+              "path": "/profile/:id",
+              "method": "GET",
+              "summary": "Get the detailed data for a specific student profile.",
+              "description": "Requires Student, Admin, Teacher, or Accountant role.",
+              "requestBodySchema": "null",
+              "successResponseSchema": "application/json (Student Object)",
+              "errorResponses": "401, 403, 404"
+            },
+            {
+              "path": "/",
+              "method": "GET",
+              "summary": "Retrieve a list of all students.",
+              "description": "Requires Admin, Teacher, or Accountant role. Teachers may only see students relevant to them (filtering happens in controller).",
+              "requestBodySchema": "null",
+              "successResponseSchema": "application/json (Array of Student Objects)",
+              "errorResponses": "401, 403, 500"
+            },
+            {
+              "path": "/:id",
+              "method": "GET",
+              "summary": "Retrieve a single student by ID.",
+              "description": "Requires Student (viewing own profile), Admin, Teacher, or Accountant role.",
+              "requestBodySchema": "null",
+              "successResponseSchema": "application/json (Student Object)",
+              "errorResponses": "401, 403, 404"
+            },
+            {
+              "path": "/",
+              "method": "POST",
+              "summary": "Create a new student record.",
+              "description": "Requires Admin or Accountant role. Supports uploading student documents and profile picture via multipart form data.",
+              "requestBodySchema": "multipart/form-data containing student details and up to 8 file fields: profilePicture, cnicFront, cnicBack, bForm, characterCertificate, previousClassResult, class10Result, class12Result.",
+              "successResponseSchema": "application/json (Created Student Object)",
+              "errorResponses": "401, 403, 400"
+            },
+            {
+              "path": "/:id",
+              "method": "PUT",
+              "summary": "Update an existing student record by ID.",
+              "description": "Requires Admin, Teacher, Accountant, or Student role (with authorization logic). Supports updating student details and documents via multipart form data.",
+              "requestBodySchema": "multipart/form-data containing updated student details and potentially new file uploads (profilePicture, cnicFront, etc.).",
+              "successResponseSchema": "application/json (Updated Student Object)",
+              "errorResponses": "401, 403, 404, 400"
+            },
+            {
+              "path": "/:id",
+              "method": "DELETE",
+              "summary": "Delete a student record by ID.",
+              "description": "Requires Admin role only.",
+              "requestBodySchema": "null",
+              "successResponseSchema": "application/json { message: 'Student deleted successfully' }",
+              "errorResponses": "401, 403, 404"
+            },
+            {
+              "path": "/:id/promote",
+              "method": "PUT",
+              "summary": "Promote a specific student to the next class level.",
+              "description": "Requires Admin or Teacher role. Used for individual student promotion.",
+              "requestBodySchema": "application/json (Optional parameters for target class/section, otherwise auto-increment)",
+              "successResponseSchema": "application/json (Updated Student Object)",
+              "errorResponses": "401, 403, 404, 500"
+            },
+            {
+              "path": "/:id/demote",
+              "method": "PUT",
+              "summary": "Demote a specific student to the previous class level.",
+              "description": "Requires Admin or Teacher role. Used for individual student demotion.",
+              "requestBodySchema": "application/json (Optional parameters for target class/section)",
+              "successResponseSchema": "application/json (Updated Student Object)",
+              "errorResponses": "401, 403, 404, 500"
+            },
+            {
+              "path": "/:id/promote-semester",
+              "method": "PUT",
+              "summary": "Promote a specific student to the next semester.",
+              "description": "Requires Admin or Teacher role.",
+              "requestBodySchema": "application/json (Optional parameters)",
+              "successResponseSchema": "application/json (Updated Student Object)",
+              "errorResponses": "401, 403, 404, 500"
+            },
+            {
+              "path": "/:id/demote-semester",
+              "method": "PUT",
+              "summary": "Demote a specific student to the previous semester.",
+              "description": "Requires Admin or Teacher role.",
+              "requestBodySchema": "application/json (Optional parameters)",
+              "successResponseSchema": "application/json (Updated Student Object)",
+              "errorResponses": "401, 403, 404, 500"
+            },
+            {
+              "path": "/promote",
+              "method": "PATCH",
+              "summary": "Bulk action to promote a group of students based on criteria.",
+              "description": "Requires Admin role. Updates the class or status of multiple students simultaneously.",
+              "requestBodySchema": "application/json (e.g., { filterCriteria: { class: 'X' }, newClass: 'Y' })",
+              "successResponseSchema": "application/json { message: 'Students promoted successfully' }",
+              "errorResponses": "401, 403, 500"
+            },
+            {
+              "path": "/increase-fee",
+              "method": "PATCH",
+              "summary": "Bulk action to increase fees for selected students or classes.",
+              "description": "Requires Admin role. Typically takes a percentage or fixed amount and criteria for application.",
+              "requestBodySchema": "application/json (e.g., { increaseAmount: 500, criteria: { class: 'A' } })",
+              "successResponseSchema": "application/json { message: 'Fees updated successfully' }",
+              "errorResponses": "401, 403, 500"
+            },
+            {
+              "path": "/:id/fee-status",
+              "method": "PATCH",
+              "summary": "Update the fee payment status for a specific student.",
+              "description": "Requires Admin role (can be extended to Accountant).",
+              "requestBodySchema": "application/json (e.g., { isFeePaid: true, paymentDate: '...' })",
+              "successResponseSchema": "application/json (Updated Student Object with new fee status)",
+              "errorResponses": "401, 403, 404, 400"
+            }
+          ]
+        }
+      ],
+      "merged_documentation": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "API Docs",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/promote-semester": {
+            "put": {
+              "summary": "Promote all students matching specific criteria (e.g., class/section) to the next semester.",
+              "description": "Requires Admin or Teacher role. Used for bulk semester promotions.",
+              "tags": [
+                "promote-semester"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/demote-semester": {
+            "put": {
+              "summary": "Demote all students matching specific criteria to the previous semester.",
+              "description": "Requires Admin or Teacher role. Used for bulk semester demotions.",
+              "tags": [
+                "demote-semester"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/promote-class": {
+            "put": {
+              "summary": "Promote all students matching specific criteria to the next class.",
+              "description": "Requires Admin or Teacher role. Used for bulk class promotions.",
+              "tags": [
+                "promote-class"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/demote-class": {
+            "put": {
+              "summary": "Demote all students matching specific criteria to the previous class.",
+              "description": "Requires Admin or Teacher role. Used for bulk class demotions.",
+              "tags": [
+                "demote-class"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/my-data/:id": {
+            "get": {
+              "summary": "Get the detailed data for a specific student profile. Used typically by the student themselves or authorized staff.",
+              "description": "Requires Student, Admin, Teacher, or Accountant role. Logic in controller must ensure students can only view their own profile unless authorized.",
+              "tags": [
+                "my-data"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/profile/:id": {
+            "get": {
+              "summary": "Get the detailed data for a specific student profile.",
+              "description": "Requires Student, Admin, Teacher, or Accountant role.",
+              "tags": [
+                "profile"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/": {
+            "get": {
+              "summary": "Retrieve a list of all students.",
+              "description": "Requires Admin, Teacher, or Accountant role. Teachers may only see students relevant to them (filtering happens in controller).",
+              "tags": [
+                "default"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "post": {
+              "summary": "Create a new student record.",
+              "description": "Requires Admin or Accountant role. Supports uploading student documents and profile picture via multipart form data.",
+              "tags": [
+                "default"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/:id": {
+            "get": {
+              "summary": "Retrieve a single student by ID.",
+              "description": "Requires Student (viewing own profile), Admin, Teacher, or Accountant role.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "put": {
+              "summary": "Update an existing student record by ID.",
+              "description": "Requires Admin, Teacher, Accountant, or Student role (with authorization logic). Supports updating student details and documents via multipart form data.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "delete": {
+              "summary": "Delete a student record by ID.",
+              "description": "Requires Admin role only.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/:id/promote": {
+            "put": {
+              "summary": "Promote a specific student to the next class level.",
+              "description": "Requires Admin or Teacher role. Used for individual student promotion.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/:id/demote": {
+            "put": {
+              "summary": "Demote a specific student to the previous class level.",
+              "description": "Requires Admin or Teacher role. Used for individual student demotion.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/:id/promote-semester": {
+            "put": {
+              "summary": "Promote a specific student to the next semester.",
+              "description": "Requires Admin or Teacher role.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/:id/demote-semester": {
+            "put": {
+              "summary": "Demote a specific student to the previous semester.",
+              "description": "Requires Admin or Teacher role.",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/promote": {
+            "patch": {
+              "summary": "Bulk action to promote a group of students based on criteria.",
+              "description": "Requires Admin role. Updates the class or status of multiple students simultaneously.",
+              "tags": [
+                "promote"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/increase-fee": {
+            "patch": {
+              "summary": "Bulk action to increase fees for selected students or classes.",
+              "description": "Requires Admin role. Typically takes a percentage or fixed amount and criteria for application.",
+              "tags": [
+                "increase-fee"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/:id/fee-status": {
+            "patch": {
+              "summary": "Update the fee payment status for a specific student.",
+              "description": "Requires Admin role (can be extended to Accountant).",
+              "tags": [
+                ":id"
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ltm_hit": false
+    },
+    "timestamp": "2025-11-24T11:13:54.532Z"
+  }
+}
