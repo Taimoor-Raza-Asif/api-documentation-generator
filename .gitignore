@@ -5,6 +5,5 @@ node_modules
 *.log
 .env
 temp.txt
-index.html
 temporaryFile.txt
 documentation.json

@@ -1,166 +1,127 @@
-# 🤖 Documentation Generator AI Agent
+# ⚡ AI API Documentation Generator
 
-This repository contains the **Supervisor-Compliant *Documentation
-Generator Agent*** for the **Software Project Management (SPM)** course,
-**Section C**.
+Instantly turn your source code into professional **OpenAPI 3.0** documentation.
 
-This is a fully autonomous, callable AI "worker agent" built using
-**Node.js** and **Express**.\
-It is designed to be triggered by a **Supervisor Agent** to perform one
-complex task:
+This is a robust, AI-powered agent that analyzes codebases (Git repositories, ZIP archives, or raw files) and generates detailed API documentation using **Google's Gemini 2.5 Flash**.
 
-> **Analyze source code (any language) → Generate rich, professional
-> OpenAPI 3.0 documentation using the Gemini AI API.**
+It features **Smart Long-Term Memory (LTM)** to cache results, ensuring you never pay for the same compute twice, and built-in **Rate Limiting** to respect API quotas.
 
-The implementation is **100% compliant** with the official **Supervisor
-message-passing protocol**.
+---
 
 ## ✨ Key Features
 
--   **Supervisor-Compliant Protocol**\
-    Fully follows the JSON handshake (`message_id`, `sender`, `type`,
-    `status`, etc.) for both input and output.
+### 🧠 Smart Long-Term Memory (LTM)
+- Uses **Content Hashing (SHA-256)** for files and **Commit SHA tracking** for Git repos.  
+- If code hasn't changed, it returns a cached result instantly (**< 50ms**).
 
--   **AI-Powered Documentation**\
-    Uses **Gemini 2.5 Flash** to infer:
+### 🛡️ Robust Rate Limiting
+- Automatically throttles requests (**10 RPM**) to prevent 429 errors.  
+- Queues large projects and processes them in safe batches.
 
-    -   API endpoint summaries
-    -   Descriptions
-    -   Tags
-    -   Request/Response bodies
-    -   Parameter schemas
+### 🌐 Multi-Source Support
+- **Git Repos:** Paste a `.git` URL (analyzes the latest commit).  
+- **ZIP Files:** Upload a full project archive.  
+- **Code Files:** Upload individual source files.
 
--   **Language-Agnostic**\
-    Automatically detects languages if not provided.
+### 🔌 Supervisor Compliant
+- Follows a strict **JSON message-passing protocol**, easy to plug into multi-agent systems.
 
--   **Multi-Modal Input Support**
+---
 
-    -   Git Repo Mode (`git_repo_url`)
-    -   Zip File Mode (`zip_file_base64`)
-    -   Code Files Mode (`code_files_base64`)
+## 🚀 How to Use
 
--   **Smart File Discovery**\
-    Detects relevant API files automatically while ignoring junk
-    directories.
+### **Method 1: The Web Interface (GUI)**
+1. Deploy the agent (or run locally).  
+2. Open `index.html` or your deployment URL.  
+3. Select your language and input method (Git, ZIP, files).  
+4. Watch the AI generate your docs in real-time!
 
--   **Adaptive Memory**\
-    Can generate new documentation or update existing OpenAPI specs.
+---
 
--   **Detailed Output Structure**\
-    Includes `file_by_file_results` and final `merged_documentation`.
+### **Method 2: API Request (For Developers)**
 
-## 🚀 Local Setup
+`POST /execute`
 
-### Prerequisites
+**Endpoint:**
+https://your-app-url.onrender.com/execute
 
--   Node.js v20+
--   Gemini API Key
+**Headers:**
+Content-Type: application/json
 
-### Installation
-
-``` bash
-git clone <your-repo-url>
-cd documentation-generator-agent
-npm install
-```
-
-### Environment Variables
-
-Create `.env`:
-
-    GEMINI_API_KEY=YOUR_API_KEY_HERE
-
-### Run
-
-``` bash
-npm start
-```
-
-Agent runs at:
-
-    http://localhost:3000
-
-## ☁️ Deployment (Render.com)
-
-1.  Push project to GitHub.
-
-2.  Create new Render Web Service.
-
-3.  Set:
-
-    -   Build Command: `npm install`
-    -   Start Command: `npm start`
-
-4.  Add environment variable:
-
-        GEMINI_API_KEY=YOUR_API_KEY
-
-Render provides a deployment URL (e.g.,
-`https://doc-agent.onrender.com`).
-
-## 🤝 Supervisor API Contract
-
-### Endpoint
-
-    POST /execute
-    Content-Type: application/json
-
-### Example Supervisor Request
-
-``` json
+**Payload Example:**
+```json
 {
-  "message_id": "uuid-from-supervisor-123",
-  "sender": "supervisor",
-  "recipient": "documentation_generator_agent",
+  "message_id": "unique-id-123",
+  "sender": "user",
   "type": "task_assignment",
-  "related_message_id": null,
-  "status": "pending",
-  "timestamp": "2025-11-15T12:00:00Z",
   "results/task": {
     "language": "javascript",
     "git_repo_url": "https://github.com/user/repo.git",
-    "zip_file_base64": null,
-    "code_files_base64": null,
-    "existing_documentation": null,
-    "search_patterns": ["**/routes/**"]
+    "search_patterns": ["**/routes/**", "**/controllers/**"]
   }
 }
 ```
 
-## Successful Response
+## 🛠️ Local Setup
 
-``` json
-{
-  "message_id": "doc-agent-uuid-456",
-  "sender": "documentation_generator_agent",
-  "recipient": "supervisor",
-  "type": "task_response",
-  "related_message_id": "uuid-from-supervisor-123",
-  "status": "completed",
-  "timestamp": "2025-11-15T12:01:00Z",
-  "results/task": {
-    "status_message": "Documentation successfully processed for 7 endpoint(s).",
-    "endpoints_found": 7,
-    "file_by_file_results": [],
-    "merged_documentation": {}
-  }
-}
+### 1. Clone the repository
+```bash
+git clone https://github.com/your-username/documentation-generator-agent.git
+cd documentation-generator-agent
 ```
 
-## Failure Response
-
-``` json
-{
-  "message_id": "doc-agent-uuid-789",
-  "sender": "documentation_generator_agent",
-  "recipient": "supervisor",
-  "type": "task_response",
-  "related_message_id": "uuid-from-supervisor-123",
-  "status": "failed",
-  "timestamp": "2025-11-15T12:01:00Z",
-  "results/task": {
-    "status_message": "An error occurred while processing the task.",
-    "error_details": "Failed to process git repo: Repository not found."
-  }
-}
+### 2. Install dependencies
+```bash
+npm install
 ```
+
+### 3. Configure Environment
+
+Create a .env file in the root directory:
+```bash
+GEMINI_API_KEY=your_google_gemini_key_here
+PORT=3000
+```
+### 4. Run the Agent
+```bash
+npm start
+```
+
+Visit: http://localhost:3000
+
+## ☁️ Deployment (Render.com)
+
+This project is **Render-Ready**.
+
+1. Fork/clone the repository.  
+2. Create a new **Web Service** on Render.  
+3. Connect your GitHub repository.  
+4. Configure the following:
+
+**Build Command:**
+```bash
+npm install
+```
+
+### Start Command:
+```bash
+npm start
+```
+
+### Environment Variables:
+```bash
+GEMINI_API_KEY
+```
+Done — your agent is live.
+
+## 🏗️ Architecture Overview
+
+- **Runtime:** Node.js & Express  
+- **AI Model:** Google Gemini 2.5 Flash  
+- **Git Operations:** simple-git  
+- **File Processing:** adm-zip & glob  
+- **Memory System:** JSON-based LTM with LRU pruning strategy  
+
+---
+
+**Created by Taimoor Raza Asif**
