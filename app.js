@@ -29,7 +29,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-// --- LTM SETUP ---
+// ---  LONG-TERM MEMORY (LTM) SETUP  ---
 const LTM_FILE_PATH = path.join(__dirname, 'LTM', 'memory.json');
 const LTM_DIR = path.dirname(LTM_FILE_PATH);
 const LTM_WINDOW_SIZE = 10;
@@ -121,7 +121,6 @@ async function saveToLTM(signature, result, ltmData) {
   await writeLTM(ltmData);
 }
 
-// =-----------------------------------------------------------
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: "I'm up", agent_name: "Doc Agent (Smart LTM)" });
@@ -168,7 +167,17 @@ app.post('/execute', async (req, res) => {
         ruby: ["**/app/controllers/**", "config/routes.rb"],
         php: ["**/app/Http/Controllers/**", "routes/api.php"],
         cpp: ["**/routes/**", "main.cpp"],
-        c: ["**/routes/**", "main.c"]
+        c: ["**/routes/**", "main.c"],
+        rust: ["**/src/routes/**", "**/src/api/**", "src/main.rs"],
+        kotlin: ["**/src/**/controller/**", "**/src/**/api/**"],
+        swift: ["**/Sources/**/Controllers/**", "**/Sources/**/routes.swift"],
+        scala: ["**/src/**/controllers/**", "**/src/**/api/**"],
+        groovy: ["**/grails-app/controllers/**", "**/src/**/controller/**"],
+        haskell: ["**/src/Handler/**", "**/src/Routes.hs"],
+        lua: ["**/app/controllers/**", "**/app/routes.lua"],
+        perl: ["**/lib/**/Controller/**", "**/lib/**/Routes.pm"]
+
+
     }[language] || ["**/"];
 
     if (zip_file_base64) {
@@ -336,7 +345,7 @@ async function detectLanguage(language, filesToProcess) {
   if (language && language.trim() !== "") return language;
   if (!filesToProcess || filesToProcess.length === 0) return 'javascript';
   const ext = path.extname(filesToProcess[0].file_path).toLowerCase();
-  const map = {'.js':'javascript','.py':'python','.java':'java','.go':'go','.rb':'ruby','.php':'php','.cpp':'cpp','.c':'c','.cs':'csharp','.ts':'typescript'};
+  const map = {".js": "javascript",".ts": "typescript",".py": "python",".java": "java",".kt": "kotlin",".scala": "scala",".swift": "swift",".go": "go",".rb": "ruby",".php": "php",".cs": "csharp",".cpp": "cpp",".c": "c",".rs": "rust"};
   if (map[ext]) return map[ext];
 
   const codeSnippet = filesToProcess[0].code_snippet;
@@ -367,7 +376,7 @@ async function cloneRepoAndGetFiles(repoUrl, searchPatterns) {
 }
 
 async function findCodeFiles(baseDir, searchPatterns) {
-  const defaultFileTypes = ['*.js', '*.ts', '*.py', '*.java', '*.go', '*.rb', '*.php', '*.cpp', '*.c', '*.cs'];
+  const defaultFileTypes = ["*.js","*.ts","*.py","*.java","*.kt","*.scala","*.swift","*.go","*.rb","*.php","*.cs","*.cpp","*.c","*.rs"];
   const globPatterns = [];
   const patternsToUse = searchPatterns || ['**/'];
   for (const pattern of patternsToUse) {
