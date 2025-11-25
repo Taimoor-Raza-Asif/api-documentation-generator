@@ -296,6 +296,10 @@ function createSuccessResponse(relatedId, message, mergedDoc, fileResults, endpo
 }
 
 function createSuccessResponseFromCache(relatedId, cachedTaskResult) {
+  const safeResult = cachedTaskResult && typeof cachedTaskResult === 'object'
+    ? cachedTaskResult
+    : { status_message: "Cached result unavailable", endpoints_found: 0 };
+
   return {
     message_id: `doc-agent-${uuidv4()}`,
     sender: "documentation_generator_agent",
@@ -304,13 +308,14 @@ function createSuccessResponseFromCache(relatedId, cachedTaskResult) {
     related_message_id: relatedId,
     status: "completed",
     "results/task": {
-      ...cachedTaskResult,
-      status_message: `[LTM HIT] ${cachedTaskResult.status_message}`,
+      ...safeResult,
+      status_message: `[LTM HIT] ${safeResult.status_message}`,
       ltm_hit: true
     },
     timestamp: new Date().toISOString()
   };
 }
+
 
 function createErrorResponse(relatedId, message, error) {
   return {
