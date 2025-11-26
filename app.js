@@ -129,6 +129,12 @@ app.get('/health', (req, res) => {
 
 app.post('/execute', async (req, res) => {
   const incomingMessage = req.body;
+  if (!incomingMessage.message_id) {
+    console.warn("[WARN] Missing message_id in request body");
+    return res.status(400).json({
+      message: "Missing message_id in request payload"
+    });
+  }
   if (incomingMessage.type !== 'task_assignment') return res.status(400).json({ message: "Invalid type" });
 
   const taskData = incomingMessage["results/task"] || {};
