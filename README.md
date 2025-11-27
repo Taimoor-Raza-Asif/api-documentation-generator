@@ -124,4 +124,4 @@ Done — your agent is live.
 
 ---
 
-**Created by Taimoor Raza Asif**
+**Created by Taimoor Raza Asif, Hamza Aftab, Abdullah Ghani**
